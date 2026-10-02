@@ -1,0 +1,31 @@
+# Секреты Google
+google_credentials.json
+token.json
+credentials.json
+
+# Локальные данные Google/Shinri Tracker
+*.shinrigroup
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+.venv/
+venv/
+
+# PyCharm
+.idea/
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Локальный Tesseract
+tesseract/
+
+# Windows
+Thumbs.db
+desktop.ini

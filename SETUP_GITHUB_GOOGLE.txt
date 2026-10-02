@@ -1,0 +1,119 @@
+SHINRI TRACKER v0.9 — ОДНОРАЗОВАЯ НАСТРОЙКА РАЗРАБОТЧИКА
+===========================================================
+
+Обычным пользователям эти шаги НЕ нужны. Они получают готовый EXE,
+входят в Google через браузер и пользуются общей группой.
+
+
+1. GOOGLE DRIVE ДЛЯ ОБЩИХ ГРУПП
+--------------------------------
+1) Открой Google Cloud Console и создай проект, например "Shinri Tracker".
+2) Включи Google Drive API.
+3) Google Auth Platform / Branding:
+   - App name: Shinri Tracker
+   - Audience: External
+4) Data Access: приложению нужен только scope:
+   https://www.googleapis.com/auth/drive.file
+   Это узкий per-file scope: программа не просит полный доступ ко всему Drive.
+5) Clients -> Create Client -> Desktop app.
+6) Скачай JSON клиента и переименуй его в:
+   google_credentials.json
+7) Положи google_credentials.json в корень проекта рядом с main.py.
+
+Для локального теста в режиме Testing добавь Google-аккаунты друзей в Test users.
+Для нормального распространения переведи OAuth app в Production и пройди ту
+проверку/branding verification, которую Google потребует для твоего проекта.
+
+ВАЖНО: google_credentials.json — конфигурация OAuth desktop-клиента. Токены
+конкретных пользователей туда НЕ входят. Пользовательские OAuth-токены программа
+хранит только локально на его ПК в %LOCALAPPDATA%\ShinriTracker.
+
+
+2. GITHUB ДЛЯ АВТООБНОВЛЕНИЙ
+-----------------------------
+1) Создай PUBLIC GitHub repository, например ShinriTracker.
+   Публичный нужен, чтобы приложение могло проверять Releases без GitHub-токена.
+2) Загрузи туда полный проект вместе с папкой:
+   .github/workflows/release.yml
+3) НЕ коммить google_credentials.json в публичный репозиторий.
+   Добавь его содержимое как GitHub Secret:
+
+   Repository -> Settings -> Secrets and variables -> Actions
+   -> New repository secret
+
+   Name:
+   GOOGLE_OAUTH_JSON
+
+   Value:
+   всё содержимое скачанного google_credentials.json целиком.
+
+4) Первый Release делается тегом. Например версия 0.9.0:
+
+   git add .
+   git commit -m "Shinri Tracker 0.9.0"
+   git push
+   git tag v0.9.0
+   git push origin v0.9.0
+
+5) GitHub Actions сам:
+   - установит зависимости;
+   - добавит Tesseract + русский OCR;
+   - подставит имя твоего GitHub repository в update_config.json;
+   - подставит версию из тега в version.txt;
+   - соберёт ShinriTracker.exe;
+   - создаст GitHub Release и прикрепит EXE.
+
+
+3. КАК ВЫПУСКАТЬ СЛЕДУЮЩЕЕ ОБНОВЛЕНИЕ
+---------------------------------------
+Допустим, текущая версия 0.9.0, а новая 0.9.1.
+
+После изменения кода:
+
+   git add .
+   git commit -m "Shinri Tracker 0.9.1"
+   git push
+   git tag v0.9.1
+   git push origin v0.9.1
+
+Всё. Workflow создаст Release v0.9.1.
+У пользователей Shinri Tracker при запуске увидит новую версию через GitHub API,
+предложит скачать её, затем сам заменит старый EXE после закрытия программы.
+
+Не создавай один и тот же номер версии повторно. Для каждого обновления новый тег:
+v0.9.1 -> v0.9.2 -> v0.10.0 и т.д.
+
+
+4. ЛОКАЛЬНАЯ СБОРКА БЕЗ GITHUB ACTIONS
+---------------------------------------
+1) install_dependencies.bat
+2) Убедись, что установлен Tesseract с eng + rus.
+3) Положи google_credentials.json рядом с main.py.
+4) Для локальной сборки вручную отредактируй update_config.json:
+   github_owner = твой GitHub username
+   github_repo = название repository
+5) Запусти build_exe.bat.
+
+
+5. КАК ПОЛЬЗОВАТЬСЯ ОБЩЕЙ ГРУППОЙ
+----------------------------------
+Создатель:
+Общая группа -> Создать группу из текущей базы
+-> первый раз войти в Google -> название группы -> готово.
+
+Добавление друга:
+Общая группа -> Пригласить участника -> его Gmail.
+Google отправит стандартное приглашение на общую папку.
+
+Друг:
+Общая группа -> Подключиться к группе.
+Если группа почему-то не появилась в списке, создатель может нажать
+"Сохранить файл приглашения" и отправить маленький .shinrigroup через Discord.
+
+Изменения сохраняются локально сразу и синхронизируются в фоне. Если интернет
+пропал, программа продолжает работать с локальным кэшем и отправит изменения позже.
+
+6. БЫСТРЫЙ ВЫПУСК ОБНОВЛЕНИЯ
+-----------------------------
+После первого git setup можно вместо ручных команд запускать publish_update.bat.
+Он спросит номер новой версии, сделает commit/push/tag и запустит GitHub Actions.
